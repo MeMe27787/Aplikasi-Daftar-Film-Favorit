@@ -13,32 +13,16 @@ class DetailScreen extends StatelessWidget {
     required this.onToggleFavorite,
   }) : super(key: key);
 
-  // Fungsi untuk cek apakah poster dari internet atau assets lokal
-  Widget _buildPoster(String path) {
-    if (path.startsWith('http')) {
-      return Image.network(
-        path,
-        height: 420,
-        width: double.infinity,
-        fit: BoxFit.cover,
-      );
-    } else {
-      return Image.asset(
-        path,
-        height: 420,
-        width: double.infinity,
-        fit: BoxFit.cover,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(film.title)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => onToggleFavorite(film),
-        icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+        icon: Icon(
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: isFavorite ? Colors.red : null, // ❤️ berubah merah kalau favorit
+        ),
         label: Text(isFavorite ? 'Hapus Favorit' : 'Tambah Favorit'),
       ),
       body: SingleChildScrollView(
@@ -46,10 +30,25 @@ class DetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Poster Film
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: _buildPoster(film.poster), // ✅ bisa asset & url
+            // Poster Film → bisa diklik
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(imageUrl: film.poster),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  film.poster,
+                  height: 420,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -75,8 +74,10 @@ class DetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Sinopsis
-            const Text('Sinopsis',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            const Text(
+              'Sinopsis',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             Text(
               film.synopsis,
@@ -84,6 +85,31 @@ class DetailScreen extends StatelessWidget {
               style: const TextStyle(height: 1.4),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// 🔥 Halaman untuk Fullscreen Poster
+class FullScreenImage extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImage({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: () => Navigator.pop(context), // klik layar untuk kembali
+        child: Center(
+          child: InteractiveViewer( // bisa zoom in/out
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain, // biar tetap proporsional (potret)
+            ),
+          ),
         ),
       ),
     );
